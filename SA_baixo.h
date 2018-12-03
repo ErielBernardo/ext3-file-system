@@ -28,17 +28,17 @@
 
 
 typedef struct {
-	uint16_t indireto;
-	uint16_t tamanho;
 	uint8_t  status;
 	char     nome[8];
 	char     dados[32];
+	uint16_t indireto;
+	uint16_t tamanho;
 }entrada_arquivo;
 
 typedef struct {
 		int id;
 		int posicao;
-
+		entrada_arquivo inodo;
 }SA_FILE;
 
 typedef union {
@@ -63,5 +63,8 @@ uint16_t meu_fread(SA_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count) 
 uint16_t meu_fwrite(SA_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count) ;
 int meu_fclose(SA_FILE *A);
 
+uint16_t meu_ftell(SA_FILE *A);
+int meu_feof (SA_FILE *A);
+void cria_entrada (uint8_t numero);
 
 #endif

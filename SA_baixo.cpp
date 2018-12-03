@@ -45,9 +45,11 @@ void SA_escreva_bloco_ponteiro(uint16_t numero, uint16_t valor)
 	/*calcula a posição na memoria 
 	do bloco para alocação (ponteiro) (da lista) em questão*/
 	uint16_t endereco = numero * 2 + INICIO_AREA_BLOCO_PONTEIROS; 
-	memoria_write(endereco, (uint8_t *)&valor, 2);
+	memoria_write(0 ,endereco,  (uint8_t *)&valor, 2);
 }
 
+
+//feito alunos
 void SA_remove_arquivo (uint8_t id){
 	entrada_arquivo tmp;
 	
@@ -56,14 +58,14 @@ void SA_remove_arquivo (uint8_t id){
 	uint16_t ponteiro_indireto = tmp.indireto;
 	if(ponteiro_indireto != 0xFFFF){ //se tiver dados indiretos alocados.
 	
-		TipoDados  bloco_idx;  //bloco de endereços
-		SA_le_bloco_dados (ponteiro_indireto, (uint8_t *) &bloco_idx); //le o bloco do indireto (que tem os endereços dos blocos de dados)
+		Tipo_Bloco  bloco_idx;  //bloco de endereços
+		SA_le_bloco_dados(ponteiro_indireto, (Tipo_Bloco*)&bloco_idx.dados.enderecos); //le o bloco do indireto (que tem os endereços dos blocos de dados)
 		
-		for (int i = 0; i < 16 && bloco_idx.enderecos[i] != 0xffff; i++) // remove os blocos (referenciadas no bloco do indireto) ate achar uma entrada inválida.
+		for (int i = 0; i < 16 && bloco_idx.dados.enderecos[i] != 0xffff; i++) // remove os blocos (referenciadas no bloco do indireto) ate achar uma entrada inválida.
 		{
 			
-			SA_escreva_bloco_ponteiro(bloco_idx.enderecos[i], SA_le_cabecalho());
-			SA_escreve_cabecalho(bloco_idx.enderecos[i]); // para remover uma entrada, gravamos o valor do cabeçalho no bloco referente a entrada em questão, e marcamos essa como o valor do cabeçalho. (novo.valor = cabecalho.valor; cabecalho.valor = novo; +- assim);
+			SA_escreva_bloco_ponteiro(bloco_idx.dados.enderecos[i], SA_le_cabecalho());
+			SA_escreve_cabecalho(bloco_idx.dados.enderecos[i]); // para remover uma entrada, gravamos o valor do cabeçalho no bloco referente a entrada em questão, e marcamos essa como o valor do cabeçalho. (novo.valor = cabecalho.valor; cabecalho.valor = novo; +- assim);
 		}
 		SA_escreva_bloco_ponteiro(ponteiro_indireto, SA_le_cabecalho());
 		SA_escreve_cabecalho(ponteiro_indireto); //faz a mesma coisa, só que agora para o bloco do indireto
@@ -72,6 +74,8 @@ void SA_remove_arquivo (uint8_t id){
 	cria_entrada(id); //recria a entrada, (zera tudo)
 }
 
+
+//terminado alunos
 SA_FILE * SA_fopen (const char *nome, const char *modo)
 {
 	entrada_arquivo ent;
@@ -129,7 +133,7 @@ SA_FILE * SA_fopen (const char *nome, const char *modo)
 		for (int x  =0; x< 12; x++)
 		{
 			SA_leia_entrada_arquivo(x,&ent);
-			if (strcmp(ent.status, st)==0)
+			if (strcmp(ent.nome, nome)==0)
 			{
 				livre=x;
 				 break;
@@ -148,7 +152,7 @@ SA_FILE * SA_fopen (const char *nome, const char *modo)
 			tmp->posicao = 0;
 		}
 	}
-	return tmp;
+	return NULL;
 }
 
 uint16_t aloca (void)
@@ -299,6 +303,8 @@ void SA_format(void)
 
 
 
+//feito por noix
+
 /** buffer de bytes a serem escrito
 tamanho é o tamanho de cada item, e 
 count é a quantidade a ser escrita
@@ -324,7 +330,8 @@ uint16_t meu_fwrite(SA_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count)
 	**/
     entrada_arquivo inodo_lida; 
 
-	TipoDados bloco;
+	Tipo_Bloco bloco;
+
 	//TipoDados bloco.bytes;
 
 	if(buffer == NULL || A == NULL)
@@ -377,18 +384,18 @@ uint16_t meu_fwrite(SA_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count)
 	// aloca bloco de dados indireto p começar a operacao
 	//SA_le_bloco_dados(uint16_t numero ,Tipo_Bloco *b)
 
-	SA_le_bloco_dados (inodo_lida.indireto, (uint8_t *) &bloco_idx);
+	SA_le_bloco_dados (inodo_lida.indireto, (Tipo_Bloco *) &bloco.dados.enderecos);
 	/*Caso a entrada não esteja alocada temos que alocar ela*/
-	if (bloco_idx[numero_entrada]==0xffff)
+	if (bloco.dados.enderecos[numero_entrada]==0xffff)
 	{
 		/*le a entra em questão*/
-		bloco_idx[numero_entrada] = aloca();
+		bloco.dados.enderecos[numero_entrada] = aloca();
 		/*marca o bloco*/
 		
-		SA_salva_bloco_dados(inodo_lida.indireto , (uint8_t *) bloco_idx);
+		SA_salva_bloco_dados(inodo_lida.indireto , bloco);
 	}
 	/*le o bloco de dados*/
-	SA_le_bloco_dados (inodo_lida.indireto, (uint8_t *) &bloco_idx);
+	SA_le_bloco_dados (inodo_lida.indireto, (Tipo_Bloco *) &bloco.dados.enderecos);
 	
 	/*bloco da entrada*/
 	//enquanto tiver coisa pra escrever e tiver endereço no bloco
@@ -396,17 +403,17 @@ uint16_t meu_fwrite(SA_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count)
 	// tem que ter o que escrever > 0 e entrada tem que ser menor
 	// q o numero de blocos
 	
-	while(qtd_escrever > 0 && numero_entrada < TAMANHO_BLOCO_INDICES) {
+	while(qtd_escrever > 0 && numero_entrada < 16) {
 		// se for invalido tem q alocar
-		if(bloco_idx[numero_entrada] =0xffff) {
-			bloco_idx[numero_entrada] = aloca();
-			SA_le_bloco_dados(inodo_lida.indireto , (uint8_t *) bloco_idx); 
+		if(bloco.dados.enderecos[numero_entrada] =0xffff) {
+			bloco.dados.enderecos[numero_entrada] = aloca();
+			SA_le_bloco_dados(inodo_lida.indireto , (Tipo_Bloco *) bloco.dados.enderecos); 
 			// vai atulizar o ponteiro
 		}
 		//agr le pq ta atualizado
-		SA_le_bloco_dados (inodo_lida.indireto, (uint8_t *) &bloco_idx); 
-		n= bloco_idx[numero_entrada];
-		SA_le_bloco_dados (n, (uint8_t *) &bloco);//vai ler o  bloco
+		SA_le_bloco_dados (inodo_lida.indireto, (Tipo_Bloco *) &bloco.dados.enderecos); 
+		n= bloco.dados.enderecos[numero_entrada];
+		SA_le_bloco_dados (n, (Tipo_Bloco *) &bloco.dados.enderecos);//vai ler o  bloco
 			// tem que fazer um for pra gravar tipo o do fputc
 		// que incrementa o tamnho e faz um deslocamento	
 		// nesse for é gravado em um bloco os 
@@ -416,21 +423,21 @@ uint16_t meu_fwrite(SA_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count)
 	
 
 		for(uint16_t x = deslocamento; x < 32 && qtd_escrever > 0; x++) {
-			bloco[x] = buffer[qn_esccrito++];
+			bloco.dados.enderecos[x] = buffer[qn_esccrito++];
 			qtd_escrever--;
 			A->posicao++;
 			inodo_lida.tamanho++;
 		}
 
 		// escreve novamente o bloco que acabou de ser atualizado(bloco de dados)
-		SA_le_bloco_dados(n ,  (uint8_t *) &bloco);
+		SA_le_bloco_dados(n ,  (Tipo_Bloco *) &bloco.dados.enderecos);
 		// zera o deslocamento para o próximo bloco
 		deslocamento = 0;
 		numero_entrada++;
 	}
 	//A->posicao = posicao;
 	
-	SA_salva_entrada_arquivo(id, &inodo_lida);
+	SA_salva_entrada_arquivo(id, inodo_lida);
 	return qn_esccrito;
 }
 	
@@ -449,10 +456,11 @@ uint16_t meu_fread(SA_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count)
 
 	uint16_t n;
 	
-    struct inodo inodo_lida; 
+    entrada_arquivo inodo_lida; 
 
-	bloco_dados bloco_idx;
-	bloco_dados bloco;
+	Tipo_Bloco bloco_idx;
+	Tipo_Bloco bloco;
+	
 
 	if(buffer == NULL || A == NULL)
 	{
@@ -472,7 +480,7 @@ uint16_t meu_fread(SA_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count)
 		e a quantidade que vai escrever tem que ser maior que zero*/
 		
 		for (; A->posicao < 32 && qtd_ler > 0 && A->posicao <= inodo_lida.tamanho;){
-				buffer[qn_lido++] = inodo_lida.dados_diretos[A->posicao++]; //lemos dos dados diretos até não ter mais espaço, ainda houver algo para ler (se não chegar no fim do arquivo) e enquanto a qtd a ser lida não foi lida
+				buffer[qn_lido++] = inodo_lida.dados[A->posicao++]; //lemos dos dados diretos até não ter mais espaço, ainda houver algo para ler (se não chegar no fim do arquivo) e enquanto a qtd a ser lida não foi lida
 				qtd_ler--;
 			}
 	
@@ -495,15 +503,15 @@ uint16_t meu_fread(SA_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count)
 	
 	// aloca bloco de dados indireto p começar a operacao
 	
-	SA_le_bloco_dados (inodo_lida.indireto, (uint8_t *) &bloco_idx);
+	SA_le_bloco_dados (inodo_lida.indireto, (Tipo_Bloco *) &bloco_idx.dados.enderecos);
 	/*Caso a entrada não esteja alocada temos que alocar ela*/
-	while(qtd_ler > 0 && A->posicao <= inodo_lida.tamanho && numero_entrada < TAMANHO_BLOCO_INDICES)
+	while(qtd_ler > 0 && A->posicao <= inodo_lida.tamanho && numero_entrada < 16)
 	{ //enquanto se quer ler algo, o final do arquivo nao chegar e o numeor da entrada (do bloco de endereços) for menor do que o tamanho (16 entradas são possíveis)
-				uint16_t n = bloco_idx[numero_entrada]; 
-				SA_le_bloco_dados (n, (uint8_t *) &bloco); //le o proximo bloco
+				uint16_t n = bloco_idx.dados.enderecos[numero_entrada]; 
+				SA_le_bloco_dados (n, (Tipo_Bloco *) &bloco_idx.dados.bytes); //le o proximo bloco
 				for (int x = deslocamento; x < 32 && qtd_ler > 0 && A->posicao <= inodo_lida.tamanho; x++)
 				{
-					buffer[qn_lido++] = bloco[x]; //le cada posição do bloco em questão
+					buffer[qn_lido++] = bloco.dados.enderecos[x]; //le cada posição do bloco em questão
 					qtd_ler--;
 					A->posicao++;
 				}
@@ -517,8 +525,8 @@ uint16_t meu_fread(SA_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count)
 
 }
 
-
-int meu_fclose(MEU_FILE *A)
+//fechar arquivo feito fecha o arquivo
+int meu_fclose(SA_FILE *A)
 {
 	if(A == NULL){
 		return 1;
@@ -555,5 +563,23 @@ int meu_feof (SA_FILE *A)
 	
 	if (lida.tamanho > A->posicao) return 0;
 	return 1;
+	
+}
+
+
+
+void cria_entrada (uint8_t numero)
+{
+
+	entrada_arquivo tmp;	//Cria lista
+	tmp.status = 0; // define seus valores padrões como 0
+	tmp.tamanho=0;
+	strcpy(tmp.nome,"VAZIO"); // Nome fica vazio
+	tmp.indireto=0xFFFF;
+	for (int a=0;a<32;a++) tmp.dados[a]=0;// zera os dados diretos
+	/*pula o cabecalho (2) e faz o numero da entrada vezes o tamanho,
+	 isso retorna a posição na memória da entrada.*/
+	uint16_t posicao = 2 + numero*sizeof(entrada_arquivo);
+	memoria_write(0,posicao,  (uint8_t *)&tmp, sizeof(entrada_arquivo)); //grava na memoria
 	
 }
