@@ -39,7 +39,6 @@ typedef struct {
 		int id;
 		int posicao;
 
-
 }SA_FILE;
 
 typedef union {
@@ -59,6 +58,10 @@ SA_FILE * SA_fopen (const char *nome, const char *modo);
 void SA_fputc(uint8_t valor,SA_FILE *a);
 void SA_fseek(SA_FILE *a, uint16_t posicao);
 int SA_fgetc(SA_FILE *a);
+
+uint16_t meu_fread(SA_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count) ;
+uint16_t meu_fwrite(SA_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count) ;
+int meu_fclose(SA_FILE *A);
 
 
 #endif
