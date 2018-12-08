@@ -53,6 +53,8 @@ void SA_escreva_bloco_ponteiro(uint16_t numero, uint16_t valor)
 void SA_remove_arquivo (uint8_t id){
 	entrada_arquivo tmp;
 	
+	printf("SA_remove_arquivo\n");
+
 	SA_leia_entrada_arquivo(id, &tmp); // le a entrada desejada e salva no tmp
 	
 	uint16_t ponteiro_indireto = tmp.indireto;
@@ -209,9 +211,9 @@ void SA_fputc(uint8_t valor,SA_FILE *a)
 		SA_le_bloco_dados(blocoIndices.dados.enderecos[bloco-1], &blocoDados);
 		blocoDados.dados.bytes[deslocamento] = valor;
 		SA_salva_bloco_dados(blocoIndices.dados.enderecos[bloco-1], blocoDados);
-algumaCoisa.tamanho++;
-a->posicao  =  a->posicao + 1;
-SA_salva_entrada_arquivo (id, algumaCoisa);
+		algumaCoisa.tamanho++;
+		a->posicao  =  a->posicao + 1;
+		SA_salva_entrada_arquivo (id, algumaCoisa);
 
 	}
 
@@ -266,6 +268,7 @@ int SA_feof(SA_FILE *a)
 	if (a->posicao == algumaCoisa.tamanho) return 1;
 	return 0;
 }
+
 void SA_fseek(SA_FILE *a, uint16_t posicao)
 {
 	a->posicao = posicao;

@@ -31,7 +31,7 @@ int main ( void )
 	SA_FILE  *B;
 
 	SA_format();
-	B = SA_fopen ("UFSC","w");
+	B = SA_fopen ("UFSC2","w");
 	if (B==NULL)
 	{
 		printf("Erro tentando criar um arquivo\n");
@@ -48,13 +48,14 @@ int main ( void )
 	    meu_fwrite(B,  ( uint8_t*) buffer ,sizeof(char), strlen(buffer));
 		meu_fclose(B);
 
-		int lido;
+		//int lido;
 		printf("Terminou de gravar dados\n");
 
 		
-		//B = SA_fopen("UFSC","r+");
+		//B = SA_fopen("UFSC2","r+");
 		// mostra as letras minusculas e os numeros
 		//SA_fseek(B, 0);
+		//printf("SA_fseek\n");
 		/*for (int x=0;x<36;x++)
 		{
 			lido = SA_fgetc(B);
@@ -63,14 +64,36 @@ int main ( void )
 		*/
 
 		//printf("%d\n", meu_ftell(B));
-		/*
+		
 		meu_fread( B,(uint8_t *) buffer2, sizeof(char), strlen(buffer));
 		printf("Lido = %s\n", buffer2);
 		meu_fclose(B);
-*/
+
+	}
+	
+	B = SA_fopen ("UFSC2","w");
+	if (B==NULL)
+	{
+		printf("Erro tentando criar um arquivo\n");
+	}
+	else
+	{
+		printf("Grava dados\n");
+		strcpy(buffer, "fghijk");
+
+	    meu_fwrite(B,  ( uint8_t*) buffer ,sizeof(char), strlen(buffer));
+		meu_fclose(B);
+
+		//int lido;
+		printf("Terminou de gravar dados\n");
+
+		
+		meu_fread( B,(uint8_t *) buffer2, sizeof(char), strlen(buffer));
+		printf("Lido = %s\n", buffer2);
+		meu_fclose(B);
+
 	}
 	
 	
     return 0 ;
 }
-
